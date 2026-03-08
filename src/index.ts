@@ -1,5 +1,9 @@
+// import dotenv from "dotenv";
+// dotenv.config();
+
+import "dotenv/config";
+
 import cors from "cors";
-import dotenv from "dotenv";
 import express from "express";
 import mongoose from "mongoose";
 import {
@@ -7,7 +11,6 @@ import {
   getFeedbacks,
 } from "./controllers/feedback.controller.js";
 
-dotenv.config();
 const app = express();
 
 app.use(cors());
@@ -22,13 +25,25 @@ app.get("/health", (req, res) => res.send("System Operational"));
 
 const startServer = async () => {
   try {
-    await mongoose.connect(process.env.MONGODB_URI!);
+    const mongoUri = process.env.MONGODB_URI;
+    if (!mongoUri) throw new Error("MONGODB_URI is missing");
+
+    console.log("⏳ Connecting to MongoDB...");
+
+    await mongoose.connect(mongoUri, {
+      // These options help with SSL/TLS handshake issues on some networks
+      tls: true,
+      serverSelectionTimeoutMS: 5000,
+      family: 4,
+    });
+
     console.log("📡 Connected to User Feedback Intelligence System DB");
 
     const PORT = process.env.PORT || 5000;
     app.listen(PORT, () => console.log(`🚀 Backend running on port ${PORT}`));
-  } catch (err) {
-    console.error("Critical System Failure:", err);
+  } catch (err: any) {
+    console.error("❌ MongoDB Connection Error:", err.message);
+    process.exit(1);
   }
 };
 
