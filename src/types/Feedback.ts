@@ -1,9 +1,4 @@
-export type Category =
-  | "Bug"
-  | "Feature Request"
-  | "UI/UX"
-  | "Performance"
-  | "General";
+export type Category = "Bug" | "Features" | "UI/UX" | "Performance" | "General";
 export type Priority = "Low" | "Medium" | "High" | "Urgent";
 export type Sentiment = "Positive" | "Neutral" | "Negative";
 export type AssignedTeam =

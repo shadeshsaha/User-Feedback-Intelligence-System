@@ -6,13 +6,7 @@ import { z } from "zod";
 import type { FeedbackAnalysis } from "../types/Feedback.js";
 
 const analysisSchema = z.object({
-  category: z.enum([
-    "Bug",
-    "Feature Request",
-    "UI/UX",
-    "Performance",
-    "General",
-  ]),
+  category: z.enum(["Bug", "Features", "UI/UX", "Performance", "General"]),
   priority: z.enum(["Low", "Medium", "High", "Urgent"]),
   sentiment: z.enum(["Positive", "Neutral", "Negative"]),
   assignedTeam: z.enum([

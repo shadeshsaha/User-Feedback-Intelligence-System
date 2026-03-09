@@ -23,7 +23,7 @@ const FeedbackSchema = new Schema(
     originalText: { type: String, required: true },
     category: {
       type: String,
-      enum: ["Bug", "Feature Request", "UI/UX", "Performance", "General"],
+      enum: ["Bug", "Features", "UI/UX", "Performance", "General"],
       default: "General",
     },
     priority: {
