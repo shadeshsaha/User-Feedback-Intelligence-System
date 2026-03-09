@@ -1,58 +1,77 @@
 import { StructuredOutputParser } from "@langchain/core/output_parsers";
 import { PromptTemplate } from "@langchain/core/prompts";
+import { RunnableSequence } from "@langchain/core/runnables";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { z } from "zod";
+import type { FeedbackAnalysis } from "../types/Feedback.js";
 
-// 1. Validate Environment Variable
-const apiKey = process.env.GOOGLE_API_KEY;
-console.log("GOOGLE_API_KEY Loaded:", !!apiKey);
-
-if (!apiKey) {
-  throw new Error(
-    "CRITICAL: GOOGLE_API_KEY is not defined in the environment.",
-  );
-}
-
-// 2. Define the schema for LLM output
 const analysisSchema = z.object({
-  category: z.enum(["Bug", "Feature Request", "Pricing", "General"]),
+  category: z.enum([
+    "Bug",
+    "Feature Request",
+    "UI/UX",
+    "Performance",
+    "General",
+  ]),
   priority: z.enum(["Low", "Medium", "High", "Urgent"]),
   sentiment: z.enum(["Positive", "Neutral", "Negative"]),
-  team: z.enum(["Engineering", "Product", "Sales", "Support"]),
+  assignedTeam: z.enum([
+    "Frontend Team",
+    "Backend Team",
+    "Design Team",
+    "DevOps Team",
+    "QA Team",
+    "General",
+  ]),
 });
 
 const parser = StructuredOutputParser.fromZodSchema(analysisSchema);
 
-// 3. Initialize Model
-// Lazy initialization function
 const getModel = () => {
   const apiKey = process.env.GOOGLE_API_KEY;
-  if (!apiKey) {
-    throw new Error("CRITICAL: GOOGLE_API_KEY is still undefined at runtime.");
-  }
+  if (!apiKey) throw new Error("GOOGLE_API_KEY is missing");
+
   return new ChatGoogleGenerativeAI({
+    model: "gemini-2.5-flash",
     apiKey: apiKey,
-    model: "gemini-1.5-flash",
-    temperature: 0,
+    temperature: 0.1,
+    maxOutputTokens: 1024,
+    apiVersion: "v1",
   });
 };
 
 export const analyzeFeedbackContent = async (text: string) => {
-  // Model is only created when this function is called
-  const model = getModel();
+  try {
+    const model = getModel();
+    const prompt = new PromptTemplate({
+      template:
+        "You are a senior analyst triaging feedback.\n{format_instructions}\nFeedback: {feedback}",
+      inputVariables: ["feedback"],
+      partialVariables: { format_instructions: parser.getFormatInstructions() },
+    });
 
-  const prompt = new PromptTemplate({
-    template:
-      "Analyze the feedback and extract structured data.\n{format_instructions}\nFeedback: {feedback}",
-    inputVariables: ["feedback"],
-    partialVariables: { format_instructions: parser.getFormatInstructions() },
-  });
+    const chain = RunnableSequence.from([
+      prompt,
+      model,
+      (res) =>
+        typeof res.content === "string"
+          ? res.content
+          : JSON.stringify(res.content),
+      parser,
+    ]);
 
-  const input = await prompt.format({ feedback: text });
-  const response = await model.invoke(input);
-  const content =
-    typeof response.content === "string"
-      ? response.content
-      : JSON.stringify(response.content);
-  return await parser.parse(content);
+    const result = await chain.invoke({ feedback: text });
+    return { analysis: result as FeedbackAnalysis, aiFailover: false };
+  } catch (error) {
+    console.error("AI Analysis failed, using fallbacks:", error);
+    return {
+      analysis: {
+        category: "General",
+        priority: "Medium",
+        sentiment: "Neutral",
+        assignedTeam: "General",
+      } as FeedbackAnalysis,
+      aiFailover: true,
+    };
+  }
 };

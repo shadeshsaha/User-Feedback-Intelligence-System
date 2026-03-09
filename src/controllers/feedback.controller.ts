@@ -4,38 +4,32 @@ import { analyzeFeedbackContent } from "../services/llm.service.js";
 
 export const createFeedback = async (req: Request, res: Response) => {
   try {
-    const { userName, userEmail, content } = req.body;
+    const { userName, content } = req.body;
 
-    const analysis = await analyzeFeedbackContent(content);
+    if (!content || !userName) {
+      return res.status(400).json({ error: "Name and content required" });
+    }
+
+    const { analysis, aiFailover } = await analyzeFeedbackContent(content);
 
     const feedback = await Feedback.create({
       userName,
-      userEmail,
-      rawContent: content,
-      category: analysis.category,
-      priority: analysis.priority,
-      sentiment: analysis.sentiment,
-      assignedTeam: analysis.team,
+      originalText: content,
+      ...analysis,
+      aiFailover,
     });
 
-    res.status(201).json(feedback);
+    res.status(201).json({ success: true, data: feedback });
   } catch (error) {
-    res.status(500).json({ error: "Intelligence processing failed." });
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
 export const getFeedbacks = async (req: Request, res: Response) => {
   try {
-    const { name, category, priority } = req.query;
-    const filters: any = {};
-
-    if (name) filters.userName = { $regex: name, $options: "i" };
-    if (category) filters.category = category;
-    if (priority) filters.priority = priority;
-
-    const data = await Feedback.find(filters).sort({ createdAt: -1 });
-    res.json(data);
+    const data = await Feedback.find().sort({ createdAt: -1 });
+    res.json({ success: true, data });
   } catch (error) {
-    res.status(500).json({ error: "Data retrieval failed." });
+    res.status(500).json({ error: "Data retrieval failed" });
   }
 };
