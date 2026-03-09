@@ -27,9 +27,35 @@ export const createFeedback = async (req: Request, res: Response) => {
 
 export const getFeedbacks = async (req: Request, res: Response) => {
   try {
-    const data = await Feedback.find().sort({ createdAt: -1 });
+    const data = (await Feedback.find().sort({ createdAt: -1 })) || [];
     res.json({ success: true, data });
   } catch (error) {
-    res.status(500).json({ error: "Data retrieval failed" });
+    console.error("Fetch Error:", error);
+    res.status(500).json({ success: false, error: "Data retrieval failed" });
+  }
+};
+
+export const deleteFeedback = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const deletedItem = await Feedback.findByIdAndDelete(id);
+
+    if (!deletedItem) {
+      return res.status(404).json({
+        success: false,
+        error: "Feedback entry not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Deleted successfully",
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: "Delete failed",
+    });
   }
 };

@@ -1,24 +1,32 @@
 // import dotenv from "dotenv";
 // dotenv.config();
 
-import "dotenv/config";
-
 import cors from "cors";
+import "dotenv/config";
 import express from "express";
 import mongoose from "mongoose";
 import {
   createFeedback,
+  deleteFeedback,
   getFeedbacks,
 } from "./controllers/feedback.controller.js";
 
 const app = express();
 
-app.use(cors());
+// app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    methods: ["GET", "POST", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  }),
+);
 app.use(express.json());
 
 // Routes
-app.post("/api/feedback", createFeedback);
-app.get("/api/feedback", getFeedbacks);
+app.post("/api/createFeedback", createFeedback);
+app.get("/api/getFeedbacks", getFeedbacks);
+app.delete("/api/deleteFeedback/:id", deleteFeedback);
 
 // Health Check
 app.get("/health", (req, res) => res.send("System Operational"));
