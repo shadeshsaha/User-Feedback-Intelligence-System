@@ -16,7 +16,7 @@ const app = express();
 // app.use(cors());
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: process.env.FRONTEND_URL || "http://localhost:5173",
     methods: ["GET", "POST", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   }),
@@ -31,7 +31,7 @@ app.delete("/api/deleteFeedback/:id", deleteFeedback);
 // Health Check
 app.get("/health", (req, res) => res.send("System Operational"));
 
-const startServer = async () => {
+const nexusAIServer = async () => {
   try {
     const mongoUri = process.env.MONGODB_URI;
     if (!mongoUri) throw new Error("MONGODB_URI is missing");
@@ -55,4 +55,4 @@ const startServer = async () => {
   }
 };
 
-startServer();
+nexusAIServer();
