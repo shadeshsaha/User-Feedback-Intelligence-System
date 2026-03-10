@@ -1,14 +1,11 @@
 {
   "version": 2,
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "src/index.ts"
-    }
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/src/index.ts" },
+    { "source": "/(.*)", "destination": "/src/index.ts" }
   ],
   "functions": {
     "src/index.ts": {
-      "runtime": "@vercel/node@latest",
       "maxDuration": 15
     }
   }

@@ -2,7 +2,7 @@
 
 The Nexus AI Backend is an intelligent processing engine designed to transform unstructured user feedback into actionable insights. By utilizing Large Language Models (LLMs), it automatically classifies data, detects sentiment, and routes issues to the appropriate internal teams.
 
-🚀 Live Demo:
+🚀 Live Demo: https://nexus-ai-backend-chi.vercel.app/
 
 ## 🚀 Project Overview
 

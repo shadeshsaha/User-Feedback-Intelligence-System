@@ -13,14 +13,18 @@ import {
 
 const app = express();
 
-// app.use(cors());
-app.use(
-  cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
-    methods: ["GET", "POST", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  }),
-);
+app.use(cors({ origin: "*" }));
+// app.use(
+//   cors({
+//     origin: [
+//       "http://localhost:5173",
+//       "https://nexus-ai-frontend-rho.vercel.app/",
+//     ],
+//     credentials: true,
+//     methods: ["GET", "POST", "DELETE", "OPTIONS"],
+//     allowedHeaders: ["Content-Type", "Authorization"],
+//   }),
+// );
 app.use(express.json());
 
 // Routes
@@ -29,7 +33,14 @@ app.get("/api/getFeedbacks", getFeedbacks);
 app.delete("/api/deleteFeedback/:id", deleteFeedback);
 
 // Health Check
-app.get("/health", (req, res) => res.send("System Operational"));
+// app.get("/health", (req, res) => res.send("System Operational"));
+app.get("/", (req, res) => {
+  res.json({
+    message: "Nexus AI Backend is live!",
+    status: "Healthy",
+    timestamp: new Date().toISOString(),
+  });
+});
 
 const nexusAIServer = async () => {
   try {
